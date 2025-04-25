@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nawy_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: nawy_db
+      API_PORT: 3002
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    command: sh -c "
+      until nc -z db 5432; do echo '⏳ Waiting for Postgres...'; sleep 1; done;
+      echo '✅ DB is up. Running migrations...';
+      npm install &&
+      npm run migration:up &&
+      echo '🚀 Migrations done. Running seed...';
+      npm run seed && 
+      echo '✅ Seed done. Starting server...' &&
+      npm run dev"
+
+  frontend:
+    build:
+      context: ./nawy_fe
+      dockerfile: Dockerfile
+    environment:
+      API_HOST: http://localhost:3002
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./nawy_fe:/app
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+
+volumes:
+  postgres_data:
