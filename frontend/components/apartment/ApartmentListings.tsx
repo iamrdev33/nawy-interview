@@ -25,7 +25,8 @@ export function ApartmentListings() {
   });
   
   useEffect(() => {
-    console.log('hena');
+    const newPage = queryFilters.page == page ? 1 : page;
+    handlePageChange(newPage);
     
     setQueryFilters({
       search: debouncedSearch,
@@ -40,7 +41,7 @@ export function ApartmentListings() {
       cities: filters.cities.length ? filters.cities : undefined,
       createdBefore: filters.dateRange.to || undefined,
       createdAfter: filters.dateRange.from || undefined,
-      page: page,
+      page: newPage,
       pageSize: ITEMS_PER_PAGE,
     });
   }, [
@@ -67,11 +68,11 @@ export function ApartmentListings() {
     <div>
       <div className="mb-4 flex justify-between items-center">
         <p className="text-gray-600">
-          {isLoading ? (
+            {isLoading ? (
             'Loading apartments...'
-          ) : (
-            `Showing ${data?.apartments.length || 0} of ${data?.total || 0} apartments`
-          )}
+            ) : (
+            `Showing ${((page - 1) * ITEMS_PER_PAGE) + 1} - ${Math.min(page * ITEMS_PER_PAGE, data?.total || 0)} of ${data?.total || 0} apartments`
+            )}
         </p>
       </div>
       
