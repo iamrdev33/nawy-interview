@@ -2,12 +2,14 @@ import express from 'express';
 
 import cors from 'cors';
 import routes from './routes';
+import { setupSwagger } from './swagger';
 
 export class NawyApp {
   public app: express.Application;
 
   constructor() {
     this.app = express();
+    setupSwagger(this.app);
 
     this.initializeMiddlewares();
   }
@@ -32,6 +34,10 @@ export class NawyApp {
       optionsSuccessStatus: 204,
       credentials: true,
     };
+
+    this.app.get('/health', (req, res) => {
+      res.status(200).json({ status: 'ok' });
+    });
 
     this.app.use(express.json());
     this.app.use(cors(options));

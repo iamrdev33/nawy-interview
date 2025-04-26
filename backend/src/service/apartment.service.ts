@@ -1,11 +1,9 @@
-import { v } from "@faker-js/faker/dist/airline-BUL6NtOJ";
 import { plainToInstance } from "class-transformer";
 import dataSource from "src/db/dataSource";
 import GetApartmentsRequestDto from "src/dtos/getApartmentsRequest.dto";
 import GetApartmentsResponseDto from "src/dtos/getApartmentsResponse.dto";
 import GetSingleApartmentResponseDto from "src/dtos/getSingleApartmentResponse.dto";
 import PostApartmentRequestDto from "src/dtos/postApartmentRequest.dto";
-import PostApartmentRequest from "src/dtos/postApartmentRequest.dto";
 import { ListingStatus } from "src/enums/apartment.enums";
 import Apartment from "src/models/apartment.entity";
 import Contact from "src/models/contact.entity";
@@ -64,7 +62,13 @@ export const getApartmentsList = async (query: GetApartmentsRequestDto) => {
 
         queryBuilder.andWhere("apartment.status = :status", { status: ListingStatus.Active })
 
-        const citiesArray = Array.isArray(cities) ? cities : cities ? cities.split(',').map((city: string) => city.trim()) : [];
+        const citiesArray = Array.isArray(cities) 
+            ? cities.map(city => city.charAt(0).toUpperCase() + city.slice(1).toLowerCase())
+            : cities 
+            ? cities.split(',')
+                .map((city: string) => city.trim())
+                .map(city => city.charAt(0).toUpperCase() + city.slice(1).toLowerCase())
+            : [];
         if (citiesArray && citiesArray.length > 0) {
             queryBuilder.andWhere("apartment.city IN (:...citiesArray)", { citiesArray });
         }

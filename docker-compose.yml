@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   db:
     image: postgres:15
@@ -27,6 +25,11 @@ services:
       API_PORT: 3002
     ports:
       - "3002:3002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 10    
     depends_on:
       - db
     volumes:
@@ -37,7 +40,12 @@ services:
       echo '✅ DB is up. Running migrations...';
       npm install &&
       npm run migration:up &&
-      echo '🚀 Migrations done. Running seed...';
+      if ! psql -h db -U postgres -d nawy_db -c 'SELECT 1 FROM your_table LIMIT 1'; then
+        echo '✅ DB is empty. Running seed...';
+        npm run seed;
+      else
+        echo '✅ DB already seeded.';
+      fi
       npm run seed && 
       echo '✅ Seed done. Starting server...' &&
       npm run dev"
@@ -50,6 +58,11 @@ services:
       API_HOST: http://localhost:3002
     ports:
       - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 2s
+      retries: 10
     depends_on:
       - backend
     volumes:
@@ -57,5 +70,14 @@ services:
     working_dir: /app
     command: sh -c "npm install && npm run dev"
 
+  notifier:
+    image: alpine
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    entrypoint: sh -c "echo '🚀 App is up and running at http://localhost:3000' && tail -f /dev/null"
+    
 volumes:
   postgres_data:
