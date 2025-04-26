@@ -52,7 +52,7 @@ services:
 
   frontend:
     build:
-      context: ./nawy_fe
+      context: ./frontend
       dockerfile: Dockerfile
     environment:
       API_HOST: http://localhost:3002
@@ -66,7 +66,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./nawy_fe:/app
+      - ./frontend:/app
     working_dir: /app
     command: sh -c "npm install && npm run dev"
 
