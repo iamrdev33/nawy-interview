@@ -35,20 +35,22 @@ services:
     volumes:
       - ./backend:/app
     working_dir: /app
-    command: sh -c "
-      until nc -z db 5432; do echo '⏳ Waiting for Postgres...'; sleep 1; done;
-      echo '✅ DB is up. Running migrations...';
-      npm install &&
-      npm run migration:up &&
-      if ! psql -h db -U postgres -d nawy_db -c 'SELECT 1 FROM your_table LIMIT 1'; then
-        echo '✅ DB is empty. Running seed...';
-        npm run seed;
-      else
-        echo '✅ DB already seeded.';
-      fi
-      echo '✅ Seed done. Starting server...' &&
-      npm run dev"
-
+    command: >
+      sh -c '
+        until nc -z db 5432; do echo "⏳ Waiting for Postgres..."; sleep 1; done;
+        echo "✅ DB is up. Running migrations...";
+        npm install &&
+        npm run migration:up &&
+        if ! psql -h db -U postgres -d nawy_db -c "SELECT 1 FROM your_table LIMIT 1" > /dev/null 2>&1; then
+          echo "✅ DB is empty. Running seed...";
+          npm run seed;
+        else
+          echo "✅ DB already seeded.";
+        fi;
+        echo "✅ Seed check done. Starting server...";
+        npm run dev
+      '
+      
   frontend:
     build:
       context: ./frontend
