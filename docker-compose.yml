@@ -46,7 +46,6 @@ services:
       else
         echo '✅ DB already seeded.';
       fi
-      npm run seed && 
       echo '✅ Seed done. Starting server...' &&
       npm run dev"
 
